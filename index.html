@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Encryption and Decryption</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+        button {
+            padding: 12px 24px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            display: inline-block;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        h2, h3 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        .result {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        #decryptionResult {
+            color: red;
+            font-size: 18px;
+        }
+        #correct {
+            color: green;
+        }
+        #encryptedMessageDisplay {
+            font-weight: bold;
+            color: blue;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        /* Center the decryption section */
+        #decryptionSection {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Message Encryption</h2>
+
+<!-- Encryption Section -->
+<label for="message">Enter your message to encrypt:</label>
+<textarea id="message" rows="4" placeholder="Type your message here..."></textarea>
+
+<label for="key">Enter encryption keyword:</label>
+<input type="text" id="key" placeholder="Enter a keyword">
+
+<button onclick="encryptMessage()">Encrypt Message</button>
+
+<h3>Encrypted Message:</h3>
+<p id="encryptedMessage"></p>
+
+<!-- Guess Button -->
+<button id="guessButton" onclick="goToDecryption()" style="display:none;">Guess to Professor</button>
+
+<!-- Decryption Section (Hidden initially) -->
+<div id="decryptionSection" style="display:none;">
+    <h3>Decryption Section</h3>
+    <p><strong>Try to guess the original message:</strong></p>
+    <p id="encryptedMessageDisplay"></p> <!-- This is where the encrypted message will be displayed for the professor -->
+    <label for="decryptedMessage">Enter your guess here:</label>
+    <input type="text" id="decryptedMessage" placeholder="Enter your guess here...">
+    
+    <!-- Normal Check Guess Button -->
+    <button id="checkGuessButton" onclick="checkDecryption()">Check Guess</button>
+
+    <p id="decryptionResult"></p>
+    
+    <!-- Key Reveal Section -->
+    <label for="keyReveal">If you're stuck, enter the key to reveal the original message:</label>
+    <input type="text" id="keyReveal" placeholder="Enter the key here">
+    <button onclick="revealMessage()">Reveal Message</button>
+</div>
+
+<script>
+    let originalMessage = ""; // Store the original message for decryption comparison
+    let encryptedText = ""; // Store the encrypted text for decryption section
+    let encryptionKey = ""; // Store the encryption key
+
+    // Function to encrypt the message using Vigenère Cipher
+    function encryptMessage() {
+        const message = document.getElementById('message').value;
+        const key = document.getElementById('key').value;
+        
+        // Check if both message and key are provided
+        if (!message || !key) {
+            alert("Please provide both a message and a valid key!");
+            return;
+        }
+
+        originalMessage = message;  // Store original message for later decryption comparison
+        encryptionKey = key;  // Store the encryption key
+
+        encryptedText = vigenereEncrypt(message, key);  // Encrypt using Vigenère cipher
+        
+        // Display the encrypted message
+        document.getElementById('encryptedMessage').textContent = encryptedText;
+        
+        // Show the "Guess to Professor" button
+        document.getElementById('guessButton').style.display = 'inline';
+    }
+
+    // Vigenère Cipher Encryption function
+    function vigenereEncrypt(plaintext, key) {
+        let result = '';
+        let keyIndex = 0;
+        for (let i = 0; i < plaintext.length; i++) {
+            let char = plaintext[i];
+            let keyChar = key[keyIndex % key.length];
+            
+            if (/[a-zA-Z]/.test(char)) {
+                const base = (char === char.toUpperCase()) ? 65 : 97;
+                const shift = keyChar.toLowerCase().charCodeAt(0) - 97;
+                result += String.fromCharCode((char.charCodeAt(0) - base + shift) % 26 + base);
+                keyIndex++;
+            } else {
+                result += char; // Non-alphabetic characters remain unchanged
+            }
+        }
+        return result;
+    }
+
+    // Function to go to the decryption section
+    function goToDecryption() {
+        // Hide the encryption section and show the decryption section
+        document.querySelector('h2').style.display = 'none';
+        document.querySelector('label[for="message"]').style.display = 'none';
+        document.getElementById('message').style.display = 'none';
+        document.querySelector('label[for="key"]').style.display = 'none';
+        document.getElementById('key').style.display = 'none';
+        document.querySelector('button[onclick="encryptMessage()"]').style.display = 'none';
+        
+        document.getElementById('encryptedMessage').style.display = 'none';
+        document.getElementById('guessButton').style.display = 'none';
+        
+        // Show the decryption section and the encrypted message to guess
+        document.getElementById('decryptionSection').style.display = 'block';
+        document.getElementById('encryptedMessageDisplay').textContent = encryptedText;  // Display the encrypted message
+        document.getElementById('decryptedMessage').focus();
+    }
+
+    // Function to check if the decrypted message is correct
+    function checkDecryption() {
+        const decryptedMessage = document.getElementById('decryptedMessage').value;
+
+        // Check if the entered decrypted message matches the original message
+        if (decryptedMessage === originalMessage) {
+            document.getElementById('decryptionResult').textContent = "Correct!";
+            document.getElementById('decryptionResult').style.color = "green";
+        } else {
+            document.getElementById('decryptionResult').textContent = "Wrong!";
+            document.getElementById('decryptionResult').style.color = "red";
+        }
+    }
+
+    // Function to reveal the original message if the correct key is provided
+    function revealMessage() {
+        const enteredKey = document.getElementById('keyReveal').value;
+
+        // Check if the entered key matches the correct encryption key
+        if (enteredKey === encryptionKey) {
+            document.getElementById('decryptionResult').textContent = "The correct message is: " + originalMessage;
+            document.getElementById('decryptionResult').style.color = "green";
+        } else {
+            document.getElementById('decryptionResult').textContent = "Wrong key! Try again.";
+            document.getElementById('decryptionResult').style.color = "red";
+        }
+    }
+</script>
+
+</body>
+</html>
